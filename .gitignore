@@ -1,0 +1,40 @@
+# 환경변수 (API 키 포함 — 절대 커밋하지 말 것)
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+
+# DB
+collector/onbid.db
+collector/*.log
+data/*.db
+data/*.db-journal
+data/*.db-wal
+data/*.db-shm
+
+# 일회성 백필/유틸 스크립트
+data/_oneshot/
+
+# Basic Auth 비밀번호 파일 — 서버마다 별도 생성 (커밋 금지)
+nginx/.htpasswd
+
+# IDE
+.DS_Store
+.idea/
+.vscode/
+
+# docs
+.docs/
+docs/
+
+# superpowers brainstorm session artifacts (mockups)
+.superpowers/
+
+*.log
+
+
+env.txt
+.claude/

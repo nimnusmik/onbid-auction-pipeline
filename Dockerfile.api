@@ -1,0 +1,35 @@
+# ─────────────────────────────────────────────
+# Onbid 백엔드 (Flask + gunicorn) + 수집기 공용 이미지
+# ─────────────────────────────────────────────
+FROM python:3.12-slim
+
+# tini — PID 1 signal handling (Ctrl-C, SIGTERM 안전 처리)
+# tzdata — 컨테이너 시각을 KST 로 맞춰 로그/스케줄 timestamp 가 호스트와 일치하도록
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends tini tzdata \
+ && rm -rf /var/lib/apt/lists/*
+
+ENV TZ=Asia/Seoul
+
+WORKDIR /app
+
+# Python 의존성 (gunicorn은 requirements.txt에 없으므로 별도 설치)
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt gunicorn==21.2.0
+
+# 애플리케이션 코드
+COPY api/        ./api/
+COPY collector/  ./collector/
+COPY db/         ./db/
+COPY processor/  ./processor/
+COPY notifier/   ./notifier/
+
+# 엔트리포인트 — 호스트 볼륨의 DB를 /app/collector/onbid.db 에 심볼릭 링크
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+EXPOSE 8000
+ENTRYPOINT ["tini", "--", "/usr/local/bin/docker-entrypoint.sh"]
+
+# 기본 커맨드: gunicorn (api 서비스용). collector 서비스는 compose에서 override
+CMD ["gunicorn", "-w", "2", "-b", "0.0.0.0:8000", "--chdir", "api", "app:app"]

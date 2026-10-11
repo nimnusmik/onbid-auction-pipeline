@@ -1,0 +1,78 @@
+# ─────────────────────────────────────────────
+# Onbid 공매 대시보드 — 프로덕션 compose
+#
+# 서비스 구성:
+#   onbid_api       : Flask + gunicorn  (expose 8000, 외부 노출 X)
+#   onbid_web       : Next.js 16 prod   (expose 3000, 외부 노출 X)
+#   onbid_nginx     : nginx 리버스 프록시 (0.0.0.0:3001 외부 노출, Basic Auth 로 보호)
+#   onbid_collector : 수집 파이프라인   (profiles: manual — 호스트 cron 이 on-demand 실행)
+#
+# 접근 경로:
+#   외부 사용자 → http://<서버IP>:3001 → onbid_nginx → onbid_web / onbid_api
+#   (Basic Auth 로그인 필요. DNS/HTTPS 정식 전환 시 127.0.0.1 바인딩으로 되돌리면 됨)
+#
+# 데이터 보존:
+#   SQLite DB 는 ./data/onbid.db (바인드 마운트). 재배포해도 보존
+# ─────────────────────────────────────────────
+
+services:
+  onbid_api:
+    container_name: onbid_api
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    expose: ["8000"]
+    env_file: .env
+    volumes:
+      - ./data:/app/data
+    networks: [onbid_net]
+    restart: unless-stopped
+
+  onbid_web:
+    container_name: onbid_web
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+      args:
+        # .env 의 NEXT_PUBLIC_KAKAO_MAP_KEY 가 compose 변수 치환으로 주입됨
+        NEXT_PUBLIC_KAKAO_MAP_KEY: ${NEXT_PUBLIC_KAKAO_MAP_KEY}
+    expose: ["3000"]
+    environment:
+      # Next 의 rewrites 가 컨테이너 내부 DNS 이름으로 API 에 도달하도록
+      - API_INTERNAL=http://onbid_api:8000
+    depends_on: [onbid_api]
+    networks: [onbid_net]
+    restart: unless-stopped
+
+  onbid_nginx:
+    container_name: onbid_nginx
+    image: nginx:alpine
+    # 외부 3001 노출 — Basic Auth 로 보호 중.
+    # DNS + HTTPS 정식 전환 시 "127.0.0.1:3001:80" 으로 되돌리고 호스트 nginx 경유로 전환.
+    ports:
+      - "3001:80"
+    volumes:
+      - ./nginx/onbid.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/.htpasswd:/etc/nginx/.htpasswd:ro
+    depends_on: [onbid_web, onbid_api]
+    networks: [onbid_net]
+    restart: unless-stopped
+
+  onbid_collector:
+    container_name: onbid_collector
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    # 호스트 cron 이 `docker compose run --rm onbid_collector` 로만 기동.
+    # profiles 로 평상시 `up` 대상에서 제외.
+    profiles: [manual]
+    command: python /app/collector/run_pipeline.py
+    working_dir: /app/collector
+    env_file: .env
+    volumes:
+      - ./data:/app/data
+    networks: [onbid_net]
+
+networks:
+  onbid_net:
+    name: onbid_net

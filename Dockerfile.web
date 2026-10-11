@@ -1,0 +1,36 @@
+# ─────────────────────────────────────────────
+# Onbid 프론트엔드 (Next.js 16 프로덕션 빌드)
+# ─────────────────────────────────────────────
+
+# 1단계: 의존성만 설치 (캐시 최적화)
+FROM node:20-alpine AS deps
+WORKDIR /app
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci
+
+# 2단계: 빌드
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY frontend/ ./
+
+# NEXT_PUBLIC_* 는 빌드타임에 번들로 인라인됨 — ARG로 주입
+ARG NEXT_PUBLIC_KAKAO_MAP_KEY
+ENV NEXT_PUBLIC_KAKAO_MAP_KEY=$NEXT_PUBLIC_KAKAO_MAP_KEY
+
+RUN npm run build
+
+# 3단계: 런타임 (최소 이미지)
+FROM node:20-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+
+COPY --from=builder /app/public         ./public
+COPY --from=builder /app/.next          ./.next
+COPY --from=builder /app/node_modules   ./node_modules
+COPY --from=builder /app/package.json   ./package.json
+COPY --from=builder /app/next.config.ts ./next.config.ts
+
+EXPOSE 3000
+# -H 0.0.0.0 — 컨테이너 네트워크에서 접근 가능하게 바인딩
+CMD ["./node_modules/.bin/next", "start", "-H", "0.0.0.0"]

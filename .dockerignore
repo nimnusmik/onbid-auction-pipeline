@@ -1,0 +1,40 @@
+# Secrets & runtime state — NEVER ship inside image
+.env
+.env.*
+frontend/.env
+frontend/.env.*
+
+# Local DB (볼륨으로 마운트됨)
+collector/onbid.db
+collector/*.log
+onbid_pipeline.log
+cron_history.log
+
+# 개발 환경
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+frontend/node_modules/
+frontend/.next/
+
+# 버전관리 / IDE
+.git/
+.gitignore
+.gitattributes
+.vscode/
+.idea/
+.DS_Store
+
+# 프로젝트 메타 (이미지에 불필요)
+.claude/
+.docs/
+docs/
+README.md
+CLAUDE.md
+.env.example
+
+# 테스트/도구
+tests/
+scripts/

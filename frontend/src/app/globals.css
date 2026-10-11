@@ -1,0 +1,55 @@
+@import "tailwindcss";
+
+@theme {
+  /* Surfaces */
+  --color-bg: #fafbfc;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f8fafc;
+
+  /* Borders */
+  --color-border: #f1f5f9;
+  --color-border-strong: #e2e8f0;
+
+  /* Text (slate scale) */
+  --color-text-1: #0f172a;
+  --color-text-2: #334155;
+  --color-text-3: #64748b;
+  --color-text-4: #94a3b8;
+
+  /* Brand (Indigo) */
+  --color-primary: #6366f1;
+  --color-primary-hover: #4f46e5;
+  --color-primary-subtle: #eef2ff;
+  --color-primary-fg: #ffffff;
+
+  /* Semantic — ratio states */
+  --color-hot-bg: #fee2e2;
+  --color-hot-fg: #b91c1c;
+  --color-mid-bg: #fef3c7;
+  --color-mid-fg: #b45309;
+  --color-ok-bg: #dcfce7;
+  --color-ok-fg: #166534;
+
+  /* Semantic — urgency */
+  --color-urgent: #ef4444;
+  --color-new: #6366f1;
+
+  /* Shadows */
+  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.06), 0 1px 1px rgba(15, 23, 42, 0.04);
+  --shadow-card-hover: 0 4px 8px rgba(15, 23, 42, 0.08), 0 2px 4px rgba(15, 23, 42, 0.06);
+  --shadow-drawer: 2px 0 16px rgba(15, 23, 42, 0.12);
+
+  /* Radius */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-full: 9999px;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text-1);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-variant-numeric: tabular-nums;
+}
