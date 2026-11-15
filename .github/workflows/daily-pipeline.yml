@@ -1,0 +1,59 @@
+# Daily run: collect -> store DB as a release asset -> rebuild the read-only demo image -> redeploy Render.
+name: daily-pipeline
+
+on:
+  schedule:
+    - cron: "13 22 * * *"   # 07:13 KST
+  workflow_dispatch:
+
+permissions:
+  contents: write   # release asset (DB)
+  packages: write   # ghcr image
+
+concurrency: daily-pipeline
+
+env:
+  TZ: Asia/Seoul    # pipeline compares run dates in KST
+  IMAGE: ghcr.io/nimnusmik/onbid-demo:latest
+  GH_TOKEN: ${{ github.token }}
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Download latest DB
+        run: |
+          gh release download data-latest -p onbid.db.gz -D data
+          gunzip -f data/onbid.db.gz
+
+      - name: Run pipeline
+        env:
+          ONBID_API_KEY: ${{ secrets.ONBID_API_KEY }}
+        working-directory: collector
+        run: python run_pipeline.py
+
+      - name: Upload DB
+        run: |
+          gzip -kf data/onbid.db
+          gh release upload data-latest data/onbid.db.gz --clobber
+
+      - name: Build and push demo image
+        run: |
+          echo "$GH_TOKEN" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          docker build -f Dockerfile.demo \
+            --build-arg NEXT_PUBLIC_KAKAO_MAP_KEY=af276cd1db1fbd5117db450698b6d204 \
+            -t "$IMAGE" .
+          docker push "$IMAGE"
+
+      - name: Redeploy Render
+        run: curl -fsS -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"

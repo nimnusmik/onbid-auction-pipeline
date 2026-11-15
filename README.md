@@ -10,6 +10,19 @@ It replaced a manual workflow: before this, people searched the Onbid website on
 ![SQLite](https://img.shields.io/badge/SQLite-18_tables-003B57?logo=sqlite)
 ![Docker](https://img.shields.io/badge/Docker_Compose-4_services-2496ED?logo=docker&logoColor=white)
 
+## Screenshots
+
+Captured from the production dashboard (internal, behind Basic Auth). All data shown is public auction data from Onbid.
+
+**Overview:** 3,071 listings ranked by discount to appraisal value, with filters and real-transaction match counts.
+![Overview](assets/overview.png)
+
+**Analytics:** new listings per week, appraisal-ratio distribution, and regional discount versus market price (MOLIT).
+![Analytics](assets/analytics.png)
+
+**Listing detail:** bid-round history (including rounds backfilled from the web), price analysis, and a scored summary.
+![Listing detail](assets/item-detail.png)
+
 ---
 
 ## Architecture

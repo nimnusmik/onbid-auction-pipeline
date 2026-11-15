@@ -48,6 +48,8 @@ log = logging.getLogger(__name__)
 # 설정
 # ─────────────────────────────────────────
 SERVICE_KEY = os.environ.get("ONBID_API_KEY", "")
+# ponytail: demo serves the frozen snapshot cache only; months after the snapshot just show fewer trades
+DEMO_MODE = os.environ.get("DEMO_MODE") == "1"
 
 API_URLS = {
     "officetel":  "https://apis.data.go.kr/1613000/RTMSDataSvcOffiTrade/getRTMSDataSvcOffiTrade",
@@ -250,7 +252,7 @@ def fetch_and_cache(conn: sqlite3.Connection, lawd_cd: str, deal_ymd: str,
 
     if row:
         fetched_at = datetime.strptime(row[0], "%Y-%m-%d %H:%M:%S")
-        if (datetime.now() - fetched_at).days < CACHE_EXPIRE_DAYS:
+        if DEMO_MODE or (datetime.now() - fetched_at).days < CACHE_EXPIRE_DAYS:
             return -1  # 캐시 유효
 
         # 캐시 만료 → 기존 데이터 삭제 후 재조회
@@ -262,6 +264,9 @@ def fetch_and_cache(conn: sqlite3.Connection, lawd_cd: str, deal_ymd: str,
             "DELETE FROM MOLIT_FETCH_LOG WHERE lawd_cd=? AND deal_ymd=? AND api_type=?",
             (lawd_cd, deal_ymd, api_type),
         )
+
+    if DEMO_MODE:
+        return 0
 
     url = API_URLS.get(api_type)
     if not url:
@@ -543,7 +548,7 @@ def get_market_price(conn: sqlite3.Connection,
                 "message": f"법정동코드 매핑 없음: {sd_nm} {sggn_nm}"}
 
     # 2) API 키 확인
-    if not SERVICE_KEY:
+    if not SERVICE_KEY and not DEMO_MODE:
         return {"status": "api_error",
                 "message": "ONBID_API_KEY가 설정되지 않았습니다"}
 

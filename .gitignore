@@ -38,3 +38,4 @@ docs/
 
 env.txt
 .claude/
+data/*.db.gz

@@ -15,6 +15,15 @@ CORS(app)
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "onbid.db")
 
+# Public demo: read-only. Block writes and endpoints that call live Onbid APIs.
+DEMO_MODE = os.environ.get("DEMO_MODE") == "1"
+
+
+@app.before_request
+def _demo_read_only():
+    if DEMO_MODE and (request.method not in ("GET", "HEAD", "OPTIONS") or request.path.endswith("/check")):
+        return jsonify({"error": "Disabled in the public demo (read-only snapshot)."}), 403
+
 
 def get_db():
     conn = sqlite3.connect(DB_PATH)
