@@ -9,6 +9,7 @@ on:
 permissions:
   contents: write   # release asset (DB)
   packages: write   # ghcr image
+  actions: write    # keepalive (re-enable this workflow)
 
 concurrency: daily-pipeline
 
@@ -57,3 +58,8 @@ jobs:
 
       - name: Redeploy Render
         run: curl -fsS -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
+
+      # GitHub disables scheduled workflows after 60 days without repo activity; re-enabling resets that.
+      - name: Keepalive
+        if: always()
+        run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/daily-pipeline.yml/enable"
