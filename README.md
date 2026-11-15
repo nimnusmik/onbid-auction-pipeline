@@ -4,6 +4,11 @@ A production data pipeline and dashboard for Korean public real-estate auctions 
 
 It replaced a manual workflow: before this, people searched the Onbid website one listing at a time and compared prices by hand.
 
+**Live demo (read-only, public data):** https://onbid-demo.onrender.com  
+Free hosting, so the first load can take about a minute. The pipeline runs every day on GitHub Actions and redeploys the demo with fresh data.
+
+[![daily-pipeline](https://github.com/nimnusmik/onbid-auction-pipeline/actions/workflows/daily-pipeline.yml/badge.svg)](https://github.com/nimnusmik/onbid-auction-pipeline/actions/workflows/daily-pipeline.yml)
+
 ![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)
 ![Flask](https://img.shields.io/badge/Flask-API-000000?logo=flask)
 ![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs)
